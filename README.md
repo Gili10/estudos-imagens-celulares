@@ -1,8 +1,8 @@
 # TCC - Estudo Comparativo de CNNs para Classificação de Imagens de Células Sanguíneas
 
 ## Autores
-Alejandro Carvalho
-Ângela Kretschmann
+Alejandro Carvalho,
+Ângela Kretschmann,
 Giliard Gomes Martins
 
 ## Orientador
