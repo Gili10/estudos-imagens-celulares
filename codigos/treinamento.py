@@ -1,28 +1,62 @@
-# codigos/treinamento.py
 import os
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
+import numpy as np
+import tensorflow as tf
+from tensorflow.keras import layers, models
 
-IMG_SIZE = (128,128)
-BATCH = 32
+# Configurações
+IMG_SIZE = (128, 128)
+BASE_DIR = "../dados"
+NUM_CLASSES = 3
 EPOCHS = 20
+BATCH_SIZE = 32
 
-train_gen = ImageDataGenerator(rescale=1./255, rotation_range=20, horizontal_flip=True).flow_from_directory(
-    "../dados/train", target_size=IMG_SIZE, batch_size=BATCH, class_mode='categorical')
-val_gen = ImageDataGenerator(rescale=1./255).flow_from_directory(
-    "../dados/val", target_size=IMG_SIZE, batch_size=BATCH, class_mode='categorical')
+# Carregar dados
+print("📂 Carregando dados...")
+X_train = np.load(f"{BASE_DIR}/X_train.npy")
+X_val = np.load(f"{BASE_DIR}/X_val.npy")
+y_train = np.load(f"{BASE_DIR}/y_train.npy")
+y_val = np.load(f"{BASE_DIR}/y_val.npy")
 
-model = Sequential([
-    Conv2D(32,(3,3),activation='relu',input_shape=(128,128,3)),
-    MaxPooling2D(2,2),
-    Conv2D(64,(3,3),activation='relu'),
-    MaxPooling2D(2,2),
-    Conv2D(128,(3,3),activation='relu'),
-    MaxPooling2D(2,2),
-    Flatten(),
-    Dense(128,activation='relu'),
-    Dropout(0.5),
-    Dense(3,activation='softmax')
+print(f"Treino: {X_train.shape} - {y_train.shape}")
+print(f"Validação: {X_val.shape} - {y_val.shape}")
+
+# Criar modelo CNN própria
+print("\n🧠 Criando modelo CNN própria...")
+
+modelo = models.Sequential([
+    layers.Conv2D(32, (3,3), activation='relu', input_shape=(128, 128, 3)),
+    layers.MaxPooling2D((2,2)),
+    layers.Conv2D(64, (3,3), activation='relu'),
+    layers.MaxPooling2D((2,2)),
+    layers.Conv2D(128, (3,3), activation='relu'),
+    layers.MaxPooling2D((2,2)),
+    layers.Flatten(),
+    layers.Dense(128, activation='relu'),
+    layers.Dropout(0.5),
+    layers.Dense(NUM_CLASSES, activation='softmax')
 ])
-model.compile(optimizer='adam', loss='categor
+
+modelo.compile(
+    optimizer='adam',
+    loss='sparse_categorical_crossentropy',
+    metrics=['accuracy']
+)
+
+modelo.summary()
+
+# Criar pasta de resultados
+os.makedirs("resultados", exist_ok=True)
+
+# Treinar
+print("\n🚀 Iniciando treinamento...")
+historico = modelo.fit(
+    X_train, y_train,
+    validation_data=(X_val, y_val),
+    epochs=EPOCHS,
+    batch_size=BATCH_SIZE
+)
+
+# Salvar modelo
+modelo.save("resultados/cnn_propria_melhor.h5")
+print("\n✅ Modelo salvo em resultados/cnn_propria_melhor.h5")
+print(f"✅ Treinamento concluído!")
